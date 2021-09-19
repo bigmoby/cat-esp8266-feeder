@@ -4,7 +4,7 @@
 #include <ESP8266mDNS.h>
 
 #include "WiFiMQTTManager.h"
-#include "Stepper_28BYJ_48.h"
+#include "Stepper.h"
 #include "secrets.h"
 
 const int RESET_BUTTON = D7; //Button that will put device into Access Point mode to allow for re-entering WiFi and MQTT settings
@@ -19,8 +19,9 @@ const String buttonTitles[] = {"Feed"};
 const String argId[] = {"feed"};
 
 // stepper control
-const int delayBetweenSteps = 500; // in milliseconds
-const int feederSteps = 256;
+const int feederSteps = 512;
+const int stepsPerRevolution = 2048;
+const int stepperSpeed = 6;
 
 const String mqtt_topic = "cat_giulio_feeder";
 const String client_id = "esp8266-client-";
@@ -32,7 +33,7 @@ String mqtt_password = "";
 
 boolean feedingStatus = false;
 
-Stepper_28BYJ_48 stepper(D1, D2, D3, D4);
+Stepper stepper = Stepper(stepsPerRevolution, D1, D2, D3, D4);
 WiFiMQTTManager wmm(RESET_BUTTON, AP_PASSWORD);  // AP_PASSWORD is defined in the secrets.h file
 ESP8266WebServer server(80);
 
@@ -102,10 +103,7 @@ void configModeCallback (WiFiManager *myWiFiManager)
 
 void setup(void)
 {
-  pinMode(Pin1, OUTPUT);
-  pinMode(Pin2, OUTPUT);
-  pinMode(Pin3, OUTPUT);
-  pinMode(Pin4, OUTPUT);
+  stepper.setSpeed(stepperSpeed);
 
   Serial.begin(115200);
   Serial.println("Cat (Giulio) feeder motor control");
@@ -179,7 +177,6 @@ void subscriptionCallback(char* topic, byte* message, unsigned int length)
   Serial.println(commandMessage);
 
   command(commandMessage);
-
 }
 
 void loop(void)
@@ -191,7 +188,7 @@ void loop(void)
   // check for reset button push, and reconnect to MQTT if necessary
   wmm.loop();
 
-  delay(500);
+  delay(2000);
 }
 
 void feederControl()
@@ -208,16 +205,14 @@ void feedingMessage(boolean feedingStatus)
 
   if (feedingStatus)
   {
-    Serial.println("");
     Serial.print("Feeding message: ");
-    Serial.print("feeding");
+    Serial.println("feeding");
     wmm.client->publish(topic, "feeding", true);
   }
   else
   {
-    Serial.println("");
     Serial.print("Feeding message: ");
-    Serial.print("off");
+    Serial.println("off");
     wmm.client->publish(topic, "off", true);
   }
 }
@@ -235,6 +230,7 @@ void feedExecute(String command)
     feedingStatus = true;
     feedingMessage(feedingStatus);
     driveStepper(feederSteps);
+    delay(300);
     driveStepper(-feederSteps);
     feedingStatus = false;
     feedingMessage(feedingStatus);
@@ -247,7 +243,7 @@ void feedExecute(String command)
   }
 }
 
-void driveStepper(int c)
+void driveStepper(int steps)
 {
-  stepper.step(c, delayBetweenSteps);
+  stepper.step(steps);
 }
