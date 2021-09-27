@@ -104,10 +104,13 @@ void configModeCallback (WiFiManager *myWiFiManager)
 }
 
 
-void checkFeedButton() {
-  if ( digitalRead(FEEDER_BUTTON) == HIGH ) {
+void checkFeedButton()
+{
+  if ( digitalRead(FEEDER_BUTTON) == HIGH )
+  {
     delay(50);
-    if( digitalRead(FEEDER_BUTTON) == HIGH ){
+    if ( digitalRead(FEEDER_BUTTON) == HIGH )
+    {
       Serial.println("Feeder button pressed...");
       command("on");
     }
@@ -117,7 +120,7 @@ void checkFeedButton() {
 void setup(void)
 {
   pinMode(FEEDER_BUTTON, INPUT);
-  
+
   stepper.setSpeed(stepperSpeed);
 
   Serial.begin(115200);
