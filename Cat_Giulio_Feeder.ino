@@ -9,10 +9,12 @@
 
 const int RESET_BUTTON = D7; //Button that will put device into Access Point mode to allow for re-entering WiFi and MQTT settings
 
-const int Pin1 = D1; //define pin for ULN2003 in1
-const int Pin2 = D2; //define pin for ULN2003 in2
-const int Pin3 = D3; //define pin for ULN2003 in3
-const int Pin4 = D4; //define pin for ULN2003 in4
+const int FEEDER_BUTTON = D5; //Button that will run feeder step motor
+
+const int STEPPER_DRIVER_PIN_1 = D1; //define pin for ULN2003 in1
+const int STEPPER_DRIVER_PIN_2 = D2; //define pin for ULN2003 in2
+const int STEPPER_DRIVER_PIN_3 = D3; //define pin for ULN2003 in3
+const int STEPPER_DRIVER_PIN_4 = D4; //define pin for ULN2003 in4
 
 const String htmlHeader = "<!DOCTYPE html><html><head><title>Cat (Giulio) feeder motor control</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><style>\html,body{  width:100%\;height:100%\;margin:0}*{box-sizing:border-box}.colorAll{background-color:#90ee90}.colorBtn{background-color:#add8e6}.angleButtdon,a{font-size:30px\;border:1px solid #ccc\;display:table-caption\;padding:7px 10px\;text-decoration:none\;cursor:pointer\;padding:5px 6px 7px 10px}a{display:block}.btn{margin:5px\;border:none\;display:inline-block\;vertical-align:middle\;text-align:center\;white-space:nowrap}";
 const String buttonTitles[] = {"Feed"};
@@ -33,7 +35,7 @@ String mqtt_password = "";
 
 boolean feedingStatus = false;
 
-Stepper stepper = Stepper(stepsPerRevolution, D1, D2, D3, D4);
+Stepper stepper = Stepper(stepsPerRevolution, STEPPER_DRIVER_PIN_1, STEPPER_DRIVER_PIN_2, STEPPER_DRIVER_PIN_3, STEPPER_DRIVER_PIN_4);
 WiFiMQTTManager wmm(RESET_BUTTON, AP_PASSWORD);  // AP_PASSWORD is defined in the secrets.h file
 ESP8266WebServer server(80);
 
@@ -101,8 +103,21 @@ void configModeCallback (WiFiManager *myWiFiManager)
   Serial.println(myWiFiManager->getConfigPortalSSID());
 }
 
+
+void checkFeedButton() {
+  if ( digitalRead(FEEDER_BUTTON) == HIGH ) {
+    delay(50);
+    if( digitalRead(FEEDER_BUTTON) == HIGH ){
+      Serial.println("Feeder button pressed...");
+      command("on");
+    }
+  }
+}
+
 void setup(void)
 {
+  pinMode(FEEDER_BUTTON, INPUT);
+  
   stepper.setSpeed(stepperSpeed);
 
   Serial.begin(115200);
@@ -183,6 +198,8 @@ void loop(void)
 {
   server.handleClient();
   MDNS.update();
+
+  checkFeedButton();
 
   // required - allow WiFiMQTTManager to check for new MQTT messages,
   // check for reset button push, and reconnect to MQTT if necessary
