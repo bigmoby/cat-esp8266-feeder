@@ -1,5 +1,5 @@
 /*
- * Stepper.cpp - Stepper library for Wiring/Arduino - Version 1.1.0 - HACKED stepper library by BigMoby (stepper array routine changed and fix soft reset for ESP8266)
+ * Stepper.cpp - Stepper library for Wiring/Arduino - Version 1.1.0 - HACKED stepper library by BigMoby (stepper array routine changed and fix soft reset for ESP8266) 
  *
  * Original library        (0.1)   by Tom Igoe.
  * Two-wire modifications  (0.2)   by Sebastian Gassner
